@@ -1,0 +1,150 @@
+{% extends "base.html" %}
+{% load staticfiles %}
+
+{% block title %}个人中心页{% endblock title %}
+{% block static %}
+{{ block.super }}
+<link rel="stylesheet" href="{% static 'css/profile.css' %}" media="screen" title="no title" charset="utf-8">
+{% endblock static %}
+
+{% block content %}
+<div class="wrap">
+    <div class="ui container user segment">
+        <div id="hidediv" style="display:none;margin:0;padding:0">
+            <form action="{% url 'profile'  request.user.id  %}" method="post" enctype="multipart/form-data" id='avatar'>
+                <a href="#" id='hover1'>
+                    <div class="ui image">
+                        <img src="/upload/{{ profile.avatar }}" style="width:100px;height:100px" />
+                    </div>
+                    {{aform.as_p}}
+                </a>
+                {% csrf_token %}
+            </form>
+        </div>
+        <h3 class="ui header name">{{ request.user.profile.name }}</h3>
+        <form action="{% url 'profile'  request.user.id  %}" method="post" enctype="multipart/form-data">
+
+            <a href="#" id='hover2'>
+                <p class="subtitle" id='desc'>
+                    {{ profile.desc }} <span class="ex change" id='change'>修改</span>
+                </p>
+
+                <p class="subtitle" id='newdesc'>
+                    <input type="input" name="desc" value="" style="display:none">
+                    <button type="submit" class="ui button" id='descbutton' style="display:none">确认</button>
+                </p>
+            </a>
+            {% csrf_token %}
+        </form>
+
+    </div>
+    <div class="ui container segment">
+        <div class="hd-head">
+            <div class="hd-title">
+                <h4 class="hd-name">回答</h4>
+                <span class="hd-num">{{ answers.length }}</span>
+            </div>
+        </div>
+
+        {% for answer in answers %}
+        <div class="hd-list">
+            <div class="hd-item">
+                <div class="hd-vote-num">
+                    {{ answer.like_counts }}
+                </div>
+                <div class="hd-vote-type">
+                    赞同
+                </div>
+            </div>
+            <div class="hd-main">
+                <h4 class="hd-question">
+                    <a href="{%  url 'detail' answer.question.id %}" class="question_link">
+                        {{ answer.question.title }}
+                    </a>
+                </h4>
+                <p class="hd-item-text">
+                    {{ answer.content|safe  |slice:"50" }}......
+                </p>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+    <div class="ui container segment">
+        <div class="hd-head">
+            <div class="hd-title">
+                <h4 class="hd-name">提问</h4>
+                <span class="hd-num">{{ questions.length }}</span>
+            </div>
+        </div>
+        {% for question in questions %}
+        <div class="hd-list">
+            <div class="hd-question-item">
+                <div class="hd-question-vote-num">
+                    {{ question.answer_counts }}
+                </div>
+                <div class="hd-question-vote-type">
+                    回答
+                </div>
+            </div>
+            <div class="hd-main">
+                <h4 class="hd-question">
+                    <a href="{% url 'detail' question.id  %}" class="question_link">
+                        {{ question.title }}
+                    </a>
+                </h4>
+                <p class="hd-item-text">
+                    {{ question.desc |slice:"30"}}......
+                </p>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+{% endblock content %}
+
+{% block jquery %}
+
+$(".ui.container.user.segment  p:eq(0)").attr('class', 'user change');
+$(".ui.container.user.segment  input:eq(0)").attr('style', 'position:absolute;clip:rect(0 0 0 0)');
+$('#hidediv').css('display', 'block');
+
+$("label[for='id_avatar']").text('修改头像');
+var len = ($("#desc").text().trim().length) * 16 + 120
+$("#change").css('left', len)
+
+$('.ex.change').click(function() {
+    var desc = $("#desc").text().trim()
+    $("#desc").css('display', 'none')
+    $("#change").css('display', 'none')
+    $("#newdesc > input").attr('value', desc);
+    $("#newdesc > input").css('display', 'inline');
+    $("#newdesc > input").attr('class', 'ui input');
+    $("#descbutton").css('display', 'inline');
+})
+
+$('#avatar').on('change', function() {
+    $(this).closest('form').submit();
+});
+
+if ({{user_id}} == {{request.user.id}}){
+}
+else {
+    $("#hover1").hover(function() {
+        $(".ui.container.user.segment  p:eq(0)").css("display", "none");
+    },function() {
+        $(".ui.container.user.segment  p:eq(0)").css("display", "none");
+    });
+    $("#hover2").hover(function() {
+        $(".ex.change").css("display", "none");
+    },function() {
+        $(".ex.change").css("display", "none");
+    });
+};
+
+
+
+
+
+
+
+{% endblock jquery %}

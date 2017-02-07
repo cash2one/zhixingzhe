@@ -1,0 +1,277 @@
+{% extends "base.html" %}
+{% load staticfiles %}
+
+{% block title %}主页{% endblock title %}
+{% block static %}
+{{ block.super }}
+<link rel="stylesheet" href="{% static 'css/home.css' %}" media="screen" title="no title" charset="utf-8">
+{% endblock static %}
+
+{% block content %}
+
+<div class="ui basic segment wrap">
+    <div class="mainner">
+        <div class="ui header">最新动态</div>
+        <div class="ui loader">
+            <div class="ui basic  segment block" v-for='(index1,answer) in answers'>
+                <div class="ui divider"></div>
+                <div class="user_avatar">
+                    <div class="ui image" v-if="user_id==-1" v-on:click="profile">
+                        <a href="#">
+                            <img v-bind:src="answer.author.profile.avatar" style="width:37px;height:37px;">
+                        </a>
+                    </div>
+                    <div class="ui image" v-if="user_id!=-1">
+                        <a href="/profile/<%answer.author.id%>">
+                            <img v-bind:src="answer.author.profile.avatar" style="width:37px;height:37px;">
+                        </a>
+                    </div>
+                    <button type="button" name="button" class="ui button"><% answer.like_counts %></button>
+                </div>
+                <div class="user_answer">
+                    <div class="ui header">
+                        <a href="/detail/<%answer.question.id%>">
+                            <% answer.question.title %>
+                        </a>
+                    </div>
+                    <div class="profile">
+                        <span class="usename"><% answer.author.username %>，</span>
+                        <% answer.author.profile.desc %>
+                    </div>
+                    <div class="answer" v-if="answer.an_show==true">
+                        <div v-html='answer.content' v-highlightjs></div>
+                    </div>
+                    <div class="answer" v-if="answer.an_show==false">
+                      <div class="ui image" v-if="answer.img">
+                          <img v-bind:src="answer.img"  style="width:200px;height:112px"/>
+                      </div>
+                        <span v-html='answer.rawcontent | limitBy 145'></span>...
+                          <span><a class="readmore" v-on:click='answer.an_show=!answer.an_show' style="cursor:pointer">显示全部</a></span>
+                    </div>
+                    <div class="comment">
+                        <span>发布于<% answer.createtime%></span>
+                        <div class="ui image"  v-on:click='answer.co_show=!answer.co_show' style="cursor:pointer">
+                            <img src="{% static 'images/comment_icon.png' %}">
+                        </div>
+                        <span v-on:click='answer.co_show=!answer.co_show' style="cursor:pointer"><% answer.answer_comments.length %>条评论</span>
+                    </div>
+                    <div class="ex-comment" v-if='answer.co_show'>
+                        <div class="ui basic center aligned segment upangle">
+                            <i class="icon up large angle" style=""></i>
+                        </div>
+                        <div class="ui segment up" v-if='CommentShow(answer.answer_comments)'>
+                            <div class="ui comments">
+                                <div class="comment" v-for='(index2,comment)  in answer.answer_comments'>
+                                    <div class="avatar">
+                                        <img v-bind:src="comment.author.profile.avatar" alt="" class="ui image" />
+                                    </div>
+                                    <div class="content">
+                                        <a class="author">
+                                            <% comment.author.profile.name %>
+                                        </a>
+                                        <div class="text">
+                                            <% comment.content %>
+                                        </div>
+                                        <div class="actions">
+                                            <span class="date" style="color: grey;"><% comment.createtime %></span>
+                                        </div>
+                                    </div>
+                                    <div class="ui divider" v-if='DividerShow(index2,answer.answer_comments)'></div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="ui segment down">
+                            <input type="input" class="ui input" v-model='answer.n_comment'>
+                            <div class="ui basic segment">
+                                <button class="ui button one" v-on:click='PushComment(answer.id,index1)'>评论</button>
+                                <button class="ui button two" v-on:click='answer.co_show=!answer.co_show'>取消</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <button class="ui button" id='loadmore' v-on:click='loding' style="cursor:pointer">加载更多</button>
+    </div>
+    <div class="channel">
+        <div class="ui header">热门频道</div>
+        <div class="ui divider" style="width:210px !important;"></div>
+        <div class="ui vertical text menu">
+            <div class="active item">
+                <div class="ui image">
+                    <img src="{% static 'images/recommand_icon.png' %}" alt="" />
+                </div>
+                <span>推荐</span>
+            </div>
+            <div class="item">
+                <div class="ui image">
+                    <img src="{% static 'images/front_icon.png' %}" alt="" />
+                </div>
+                <span>前端</span>
+            </div>
+            <div class="item">
+                <div class="ui image">
+                    <img src="{% static 'images/end_icon.png' %}" alt="" />
+                </div>
+                <span>后端</span>
+            </div>
+            <div class="item">
+                <div class="ui image">
+                    <img src="{% static 'images/design_icon.png' %}" alt="" />
+                </div>
+                <span>设计</span>
+            </div>
+            <div class="item">
+                <div class="ui image">
+                    <img src="{% static 'images/product_icon.png' %}" alt="" />
+                </div>
+                <span>产品</span>
+            </div>
+        </div>
+    </div>
+{% endblock content %}
+
+{% block data %}
+answers: [],
+co_show:[],
+an_show:[],
+step: 5,
+start:0,
+end: (5-1),
+{% endblock data %}
+
+{% block methods %}
+    showanswer: function(content){
+      $('#answer').text(content)
+    },
+    loding: function() {
+        var old_length=this.answers.length
+        this.end = this.end + this.step;
+        this.getData(-1);
+    },
+    profile:function(){
+      $('#modal2 > .content').text("请先请登录")
+      this.q_modalshow()
+      return ""
+    },
+    getData: function(index) {
+        var self = this;
+        var start =self.start
+        var old_length = this.answers.length
+        if (index!=-1){
+          start=0
+        }
+        reqwest({
+            url: '/api/answers/'+start.toString()+'/'+self.end.toString(),
+            method: 'get',
+            type: 'json',
+            success: function(resp) {
+                for(var i=0;i<resp.length;i++){
+                  var imgReg = /<img.*?(?:>|\/>)/gi;
+                  var srcReg = /src=[\'\"]?([^\'\"]*)[\'\"]?/i;
+                  var imgarr = (resp[i].content).match(imgReg);
+                  var content1 = (resp[i].content).replace(imgReg,"");
+                  var content2 = content1.replace(/<[^>]+>/g,"")
+                  resp[i].rawcontent = content2
+                  if(imgarr){
+                    var src = imgarr[0].match(srcReg);
+                    resp[i].img=src[0].slice(5, -1);
+                  }
+                  else{
+                    resp[i].img=false
+                  }
+                  if(index==-1){
+                    if(resp[i].rawcontent.length<=200){
+                      resp[i]['an_show']=true;
+                    }
+                    else{
+                      resp[i]['an_show']=false;
+                    }
+                  }
+                  else{
+                    resp[i].an_show=self.an_show[i];
+                  }
+                  if(index == -1){
+                    resp[i].co_show=false
+                  }
+                  else{
+                    resp[i].co_show=self.co_show[i];
+                  }
+                  resp[i]['n_comment']='';
+                  if(index==-1){
+                    self.answers.push(resp[i]);
+                  }
+                }
+                if(index == -1){
+                  self.start = self.end+1;
+                  if (self.answers.length != old_length + self.step ) {
+                      $('#loadmore').text('已经全部加载完毕')
+                  }
+                }
+                else{
+                  self.answers=resp
+                }
+            },
+        })
+    },
+    loder: function() {
+        $('.ui.loader').attr('class', 'div');
+    },
+    CommentShow :function(commentall){
+      if(commentall.length>0){
+          return true
+       }
+      else{
+          return false
+       }
+    },
+    DividerShow: function(index,comment){
+      if(index < (comment.length-1)){
+        return true
+      }
+      else{
+        return false
+      }
+    },
+    PushComment: function(answer_id,index) {
+        var self = this;
+        if(self.user_id==-1){
+          $('#modal2 > .content').text("评论前请登录")
+          self.q_modalshow()
+          return ""
+        }
+        var comment = self.answers[index].n_comment
+        reqwest({
+            url: '/api/push_comment/',
+            type: 'json',
+            method:'post',
+            data:{
+              user:self.user_id,
+              comment:comment,
+              answer_id:answer_id,
+            },
+            success: function(resp) {
+              self.answers[index].n_comment
+              self.co_show=[]
+              self.an_show=[]
+              for(var i=0;i<self.answers.length;i++){
+                self.co_show.push(self.answers[i].co_show)
+                self.an_show.push(self.answers[i].an_show)
+              }
+              self.getData(index)
+            },
+            error: function(err) {
+              console.log('the err is :');
+              console.log(err);
+            },
+        })
+    },
+{% endblock methods %}
+
+{% block computed %}
+{% endblock computed %}
+
+{% block ready %}
+this.getData(-1);
+this.loder();
+{% endblock ready %}

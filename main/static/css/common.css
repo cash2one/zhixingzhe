@@ -1,0 +1,90 @@
+.top.nav {
+    width: 100%;
+    height: 46px;
+    position: fixed;
+    top: 0;
+    background-color: #0662BE;
+    z-index: 1;
+}
+.ui.fixed.borderless.menu {
+    width: 100%;
+    position: relative;
+    clear: both;
+    background-color: #0662BE;
+    padding-left: 22.5%;
+
+}
+
+
+.user.item{
+  margin-left: 85px;
+}
+.ui.fixed.borderless.menu > a:hover {
+    background-color: #04498E;
+}
+
+.logo.item > .ui.header{
+    margin-top:4px;
+}
+.logo.item > .ui.header > a{
+    color: #ffffff;
+    font-size: 28px;
+    color: #ffffff;
+}
+.logo.item > .ui.header > a:hover{
+    color: #ffffff;
+}
+
+/*logo header*/
+/*.ui.header.weblogo{
+  text-align: center;
+  margin: 0 auto;
+}
+.ui.header.weblogo >a{
+  color: ##1678C2;
+  font-size: 52px;
+}
+.ui.header.weblogo >a:hover{
+  color: ##1678C2;
+  font-size: 52px;
+}*/
+
+
+.ui.fixed.borderless.menu > .item > .ui.icon.input {
+    width: 275px;
+    height: 30px;
+    border-radius: 5px;
+    font-size: 13px;
+    color: #78829d;
+    margin-left: -10px;
+}
+.nav.text {
+    color: #fff;
+    margin-left: 8px;
+    font-size: 16px;
+}
+/*.right.menu > .item {
+    height: 46px;
+    background-color: #19212e;
+    margin-top: -1px;
+}*/
+
+
+
+/*footer*/
+
+.ui.vertical.text.menu>.active.item {
+    background-color: #eff6fa;
+}
+
+.ui.menu>.item {
+font-size: 13px;
+color: #979797;
+}
+
+.ui.menu >.centered.item {
+font-size: 13px;
+color: #979797;
+margin-left: 5px;
+margin-right: 5px;
+}

@@ -1,0 +1,143 @@
+{% extends "base.html" %}
+{% load staticfiles %}
+
+{% block title %}主页{% endblock title %}
+{% block static %}
+{{ block.super }}
+<link rel="stylesheet" href="{% static 'css/answer.css' %}" media="screen" title="no title" charset="utf-8">
+{% endblock static %}
+
+
+{% block content %}
+<div class="wrap">
+    <div class="topic">
+      <div class="on the line">
+        <span class="active item all question">
+          全部话题
+        </span>
+      </div>
+      <div class="ui divider"></div>
+      <div class="ui loader">
+        <button class="ui circular inverted blue button" v-for='topic in topics' v-on:click='ChoiceTopic(topic.name)'><% topic.name %></button>
+      </div>
+      <div class="ui divider"></div>
+      <div class="ui loader">
+        <div class="ui items">
+          <div class="item" v-for='question in filtered'>
+            <div class="ui image">
+              <img v-bind:src="question.author.profile.avatar" style="width:38px;height:38px">
+            </div>
+            <div class="content" style="padding-left:10px;">
+              <div class="header" style="color:#2e5e9f;font-size:14px;margin-right:10px;" >
+                 <a onclick="window.open('/detail/<%question.id%>','_self')"><% question.title %></a>
+              </div>
+              <span style="color:#BFBFBF"><% question.createtime %></span>
+              <div class="ui basic segment-p" >
+                <% question.desc  | limitBy 100 %>
+              </div>
+              <div class="extra">
+                <span href="" style="width:77px;height:28px;font-size:10px;border-radius: 3px;background-color: #eff6fa;border: solid 1px #bbcadc;padding:4px;">
+                  <i class="write icon" style="color: #225599;"></i>
+                  <span style="color: #225599;">
+                    <a onclick="window.open('/detail/<%question.id%>#answerpoint','_self')">回答</a>
+                  </span>
+                </span>
+              </div>
+              </div>
+            </div>
+            <div class="ui divider"></div>
+                <button class="ui button loadmore"v-on:click='loding'>加载更多</button>
+            </div>
+        </div>
+      </div>
+  </div>
+</div>
+{% endblock content %}
+
+
+{% block data %}
+question_data: {},
+questions: [],
+topics:[],
+choice:'',
+loadlimit: 6,
+{% endblock data %}
+
+{% block methods %}
+getData: function() {
+    var self = this;
+    reqwest({
+        url: '/api/question_all/',
+        method: 'GET',
+        type: 'json',
+        success: function(resp) {
+            self.question_data = resp;
+            self.questions = self.question_data.slice(0, self.loadlimit)
+            self.loader()
+        },
+    })
+},
+getTopic: function() {
+    var self = this;
+    reqwest({
+        url: '/api/topics/',
+        method: 'GET',
+        type: 'json',
+        success: function(resp) {
+            self.topics = resp;
+            self.loader()
+        },
+    })
+},
+ChoiceTopic: function(name) {
+  if (this.choice==name){
+    this.choice = ''
+  }
+  else{
+    this.choice=name
+  }
+},
+loding: function() {
+    if(this.loadlimit>=this.question_data.length){
+      $(".ui.button.loadmore").text('已经全部加载完毕')
+    }
+    else{
+      this.loadlimit = this.loadlimit + 5;
+      this.questions = this.question_data.slice(0, this.loadlimit);
+    }
+},
+loader: function() {
+  $('.ui.loader').attr('class', 'topic container');
+},
+
+{% endblock methods %}
+
+{% block getdate %}
+self.getData()
+self.getTopic()
+{% endblock getdate %}
+{% block computed %}
+filtered:function () {
+    var self = this
+      if (self.choice === '') {
+            return self.questions
+        }
+      else {
+          var newlist=[]
+          for(var i=0;i<self.questions.length;i++){
+            for (var j = 0; j < self.questions[i].topic.length; j++) {
+              if(self.questions[i].topic[j].name==self.choice){
+                newlist.push(self.questions[i]);
+              }
+            }
+          }
+          return newlist
+        }
+      },
+{% endblock computed %}
+
+{% block ready %}
+this.getData();
+this.getTopic();
+this.loader();
+{% endblock ready %}

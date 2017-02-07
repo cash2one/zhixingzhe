@@ -1,0 +1,309 @@
+{% load staticfiles %}
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title> {% block title %}{% endblock title %} </title>
+    {% block static %}
+    <link rel="shortcut icon" href="{% static 'images/favicon.ico' %}">
+    <link rel="stylesheet" href="http://ok05q6hos.bkt.clouddn.com/semantic.css" media="screen" title="no title" charset="utf-8">
+    <link rel="stylesheet" href="{% static 'css/common.css' %}" media="screen" title="no title" charset="utf-8">
+    <link rel="stylesheet" href="{% static 'css/dialog.css' %}" media="screen" title="no title" charset="utf-8">
+    <link rel="stylesheet" href="{% static 'css/default.css' %}" media="screen" title="no title" charset="utf-8">
+    <script type="text/javascript" src="http://ok05q6hos.bkt.clouddn.com/jquery.js"></script>
+    <script type="text/javascript" src="http://ok05q6hos.bkt.clouddn.com/semantic.js" defer='defer'></script>
+    <script type="text/javascript" src="http://ok05q6hos.bkt.clouddn.com/vue1.js"></script>
+    <script type="text/javascript" src="{% static 'js/reqwest.js' %}"></script>
+    <script type="text/javascript" src="{% static 'js/cookie.js' %}"></script>
+    <script type="text/javascript" src="{% static 'js/highlight.js' %}"></script>
+    {% endblock static %}
+</head>
+
+
+{% block header %}
+<body id='app'>
+    <div class="top nav">
+        <div class="ui fixed borderless menu">
+            <div class="logo item">
+                <div class="ui header">
+                    <a href="/home">知行者</a>
+                </div>
+            </div>
+            <div class="item">
+                <form class="ui icon input" action="{% url 'search' %}">
+                    <input class="prompt" placeholder="搜索您感兴趣的内容..." type="text" name="q">
+                    <i class="search icon"></i>
+                </form>
+            </div>
+            <a class="item" v-on:click='modalshow'>
+                <img src="{% static 'images/question_icon.png' %}" alt="" class="ui image" />
+                <span class="nav text">提问</span>
+            </a>
+            <a class="item" href="{% url 'home' %}">
+                <img src="{% static 'images/read_icon.png' %}" alt="" class="ui image" />
+                <span class="nav text">阅读</span>
+            </a>
+            <a class="item" href="{% url 'answer' %}">
+                <img src="{% static 'images/answer_icon.png' %}" alt="" class="ui image" />
+                <span class="nav text">回答</span>
+            </a>
+
+            {% if request.user.is_authenticated %}
+            <a class="user item" href="{% url 'profile' request.user.id  %}">
+                <img src="/upload/{{ request.user.profile.avatar }}" alt="" class="ui image" style="height:25px;width:25px" />
+                <span class="nav text"> {{ request.user.profile.name }}</span>
+            </a>
+            <a class="item" href="{% url 'logout' %}">
+                <span class="nav text">登出</span>
+            </a>
+            {% else %}
+            <a class="user item" href="{% url 'login' %}">
+                <span class="nav text"> 登录</span>
+            </a>
+            <a class="item" href="{% url 'register' %}">
+                <span class="nav text"> 注册 </span>
+            </a>
+            {% endif %}
+        </div>
+    </div>
+    {% endblock header %}
+
+    {% block content %}
+    {% endblock content %}
+
+    {% block footer %}
+    <div class="ui divider"></div>
+    <div class="footer">
+        <div class="ui fitted text menu">
+            <div class="left menu">
+                <div class="item">
+                    Developed by Mugglecoding team xxx
+                </div>
+            </div>
+            <div class="centered item">
+                关于我们
+            </div>
+            <div class="centered item">
+                加入我们
+            </div>
+            <div class="centered item">
+                联系我们
+            </div>
+            <div class="right menu">
+                <div class="item">
+                    京ICP备15047012号-2
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endblock footer %}
+
+     {% block modal %}
+    <div class="ui modal" id='modal1'>
+        <div class="ui secondary menu q_head">
+            <h3 class="header item">提问</h3>
+            <div class="right menu">
+                <div class="item" style="padding-left:80px">
+                    <a href="#" v-on:click='modalhide'>
+                        <img src="{% static 'images/close_icon.png' %}" alt="" />
+                    </a>
+                </div>
+            </div>
+        </div>
+        <div class="ui basic segment">
+            <div class="ui floating red message" v-show='nullshow'>
+                请填写问题再提交
+            </div>
+            <div class="ui fluid input">
+                <input type="text" v-model='question.title' onfocus="this.placeholder=''" onblur="this.placeholder='写下你的问题'" id='holder1'>
+            </div>
+            <div class="ui floating red message" v-show='ValidatoTitle'>
+                请输入50个字以内的标题
+            </div>
+            <div class="ui secondary menu q_desc">
+                <label class="header item">
+                        问题说明：
+                    </label>
+                <div class="right menu">
+                    <div class="ui image item" title="插入代码">
+                        <a href="#"><img src="{% static 'images/code_icon.png' %}" alt="" /></a>
+                    </div>
+                    <div class="ui image item" title="插入图片">
+                        <a href="#"><img src="{% static 'images/img_icon.png' %}" alt="" /></a>
+                    </div>
+                </div>
+            </div>
+            <div class="ui form textarea">
+                <textarea v-model='question.desc' onfocus="this.placeholder=''" onblur="this.placeholder='问题背景、相关代码及截图等详细信息'" id='holder2'>
+              </textarea>
+            </div>
+            <div class="ui floating red message" v-show='ValidatoDesc'>
+                请输入1000个字以内的描述
+            </div>
+
+            <div class="ui input" style="height:30px;margin:15px 10px 0px 0px;">
+                <label style="margin:auto 0px">添加话题：</label>
+                <input type="text" v-model='question.topic' onfocus="this.placeholder=''" onblur="this.placeholder='话题之间空格隔开'" id='holder3'>
+            </div>
+            <div class="ui floating red message" v-show='ValidatoTopic'>
+                请输入14个字以内的话题
+            </div>
+            <div class="actions">
+                <div class="ui right floated buttons">
+                    <div class="ui basic button item" onclick="$('.ui.modal').modal('hide')" style="margin-right:15px">
+                        取消
+                    </div>
+                    <button class="ui blue button item" v-on:click="toQuestion">发布</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="ui small modal" id='modal2'>
+        <div class="header">
+            知行者
+        </div>
+        <div class="content" style="text-align: center;">
+            <p>提问前请登录</p>
+        </div>
+        <div class="actions">
+            <div class="ui negative left button">
+                不，谢谢
+            </div>
+            <a href="{% url 'login' %}">
+                <div class="ui positive right button">
+                    好，登录
+                </div>
+            </a>
+        </div>
+      </div>
+        {% endblock modal %}
+
+        <script type="text/javascript">
+            "use strict";
+             Vue.config.delimiters = ['<%', '%>'];
+              Vue.directive('highlightjs', function() {
+              let blocks = this.el.querySelectorAll('pre code');
+              Array.prototype.forEach.call(blocks, hljs.highlightBlock);
+            });
+            var base = new Vue({
+                el: "#app",
+                data: {
+                  {% block data %}
+                  {% endblock data %}
+                  user_id:{{user_id}},
+                    question: {
+                        title: '',
+                        desc: '',
+                        topic: '',
+                    },
+                    question_validator: {
+                        title: true,
+                        desc: true,
+                        topic: true,
+                    },
+                    nullshow: false,
+                },
+                methods: {
+                  {% block methods %}
+                  {% endblock methods %}
+                    toQuestion: function() {
+                        var self = this;
+                        if ((self.question_validator.tittle == false) ||
+                            (self.question_validator.desc == false) ||
+                            (self.question_validator.topic == false)) {
+                            return ''
+                        };
+                        if ((self.question.tittle == '') ||
+                            (self.question.desc == '') ||
+                            (self.question.topic == '')) {
+                            self.nullshow = true
+                            return ''
+                        };
+                        console.log(self.question.topic)
+                        reqwest({
+                            url: '/api/question/',
+                            type: 'json',
+                            method: 'post',
+                            data: {
+                                user_id: self.user_id,
+                                title: self.question.title,
+                                desc: self.question.desc,
+                                topic: self.question.topic,
+                            },
+                            success: function(resp) {
+                                self.modalhide();
+                                self.cleardata()
+                                {% block getdate %}
+                                {% endblock getdate %}
+                            },
+                            error: function(err) {
+                                self.modalhide()
+                            },
+                        })
+                    },
+                    cleardata: function() {
+                        this.question.title = '';
+                        this.question.desc = '';
+                        this.question.topic = '';
+                        this.question_validator.title = true;
+                        this.question_validator.desc = true;
+                        this.question_validator.topic = true;
+                        this.nullshow = false;
+                    },
+                    modalshow: function() {
+                        $('#modal1').modal('show')
+                    },
+                    modalhide: function() {
+                        this.cleardata()
+                        $('#modal1').modal('hide')
+                    },
+                    q_modalshow: function() {
+                        $('#modal2').modal('show')
+                    },
+                },
+                computed: {
+                  {% block computed %}{% endblock computed %}
+                    ValidatoTitle: function() {
+                        if (this.question.title.length > 50) {
+                            this.question_validator.title = false;
+                            return true
+                        } else {
+                            this.question_validator.title = true;
+                            return false
+                        }
+                    },
+                    ValidatoDesc: function() {
+                        if (this.question.desc.length > 1000) {
+                            this.question_validator.desc = false;
+                            return true
+                        } else {
+                            this.question_validator.desc = true;
+                            return false
+                        }
+                    },
+                    ValidatoTopic: function() {
+                        if (this.question.topic.length > 14) {
+                            this.question_validator.topic = false;
+                            return true
+                        } else {
+                            this.question_validator.topic = true;
+                            return false
+                        }
+                    },
+                },
+                ready: function() {
+                  {% block ready %}{% endblock ready %}
+                }
+            });
+            $("#holder1").attr("placeholder", "写下你的问题");
+            $("#holder2").attr("placeholder", "问题背景、相关代码及截图等详细信息");
+            $("#holder3").attr("placeholder", "话题之间空格隔开");
+
+        {% block jquery %}{% endblock jquery %}
+
+      </script>
+      {% block addon %}{% endblock addon %}
+
+</body>
+
+</html>

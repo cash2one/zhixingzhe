@@ -1,0 +1,93 @@
+{% load staticfiles %}
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="utf-8">
+    <title>登录</title>
+    <link rel="shortcut icon" href="{% static 'images/favicon.ico' %}">
+    <link rel="stylesheet" href="{% static 'css\semantic.css' %}" media="screen" title="no title" charset="utf-8">
+    <link rel="stylesheet" href="{% static 'css\login.css' %}" media="screen" title="no title" charset="utf-8">
+    <link rel="stylesheet" href="{% static 'css/common.css' %}" media="screen" title="no title" charset="utf-8">
+    <script type="text/javascript" src="{% static 'js/jquery.js' %}"></script>
+
+</head>
+
+<body>
+    <form class="bg" action="{% url 'login' %}" method="post">
+        <div class="ui header weblogo"><a href="/home">知行者</a> </div>
+        <div class="ui  two item text  menu">
+            <a class="item" href="{% url 'register' %}">
+                <span>
+              <p class="outset" style="border-bottom:2px solid rgb(247, 250, 252);">注册</p>
+            </span>
+            </a>
+            <a class="active item" href="#list/editors">
+                <span>
+              <p class="outset" style="border-bottom:2px solid #2185D0;">登录</p>
+            </span>
+            </a>
+        </div>
+        {% if form.errors %}
+        <div class="ui negative message">
+            {{ form.errors }}
+        </div>
+        <div class="ui vertical menu">
+            {% for field in form %}
+            <div class="{{ field.errors|yesno:'active red ,'}} item">
+                <div class="ui transparent input">
+                    {{field}}
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+        {% else %}
+        <div class="ui vertical menu">
+            {% for field in form %}
+            <div class="item">
+                <div class="ui transparent input">
+                    {{field}}
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+        {% endif %} {% csrf_token %}
+        <button class="ui blue button">
+            登录
+        </button>
+
+        <div class="ui text menu">
+            <div class="meun">
+                <div class="ui checkbox">
+                    <input type="checkbox" checked name="remember">
+                    <label>记住我</label>
+                </div>
+            </div>
+            <div class="right menu">
+                忘记密码？
+            </div>
+        </div>
+    </form>
+    <script type="text/javascript">
+        $("#id_email").attr("placeholder", "邮箱");
+        $("#id_password").attr("placeholder", "密码（不少于6位)");
+        $("#id_password").attr("type", "password");
+        $("#id_email").focus(function() {
+            $("#id_email").attr("placeholder", "");
+        });
+        $("#id_email").blur(function() {
+            $("#id_email").attr("placeholder", "邮箱");
+        });
+        $("#id_password").focus(function() {
+            $("#id_password").attr("placeholder", "");
+        });
+        $("#id_password").blur(function() {
+            $("#id_password").attr("placeholder", "密码");
+        });
+
+    </script>
+
+
+</body>
+
+</html>

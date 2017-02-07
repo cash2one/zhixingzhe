@@ -1,0 +1,323 @@
+{% extends "base.html" %}
+{% load staticfiles %}
+
+{% block title %}主页{% endblock title %}
+{% block static %}
+{{ block.super }}
+<link rel="stylesheet" href="{% static 'css/detail.css' %}" media="screen" title="no title" charset="utf-8">
+{% endblock static %}
+
+
+{% block content %}
+<div class="ui loader">
+    <div class="wrap">
+        <div class="ui loader">
+            <div class="question" id='question'>
+                <div class="tag-label" v-if="question_data.topic">
+                    <div class="ui circular label" v-for='topic in question_data.topic'>
+                        <% topic.name %>
+                    </div>
+                </div>
+                <div class="ui header">
+                    <h3> <% question_data.title %> </h3>
+                    <div class="sub header">
+                        <div class="sub header">
+                            <% question_data.desc %>
+                        </div>
+                    </div>
+                </div>
+                <div id="divider">
+                    <div class="ui divider"></div>
+                    <div class="ui header number">
+                        <% answers.length%> 个回答</div>
+                    <div class="ui divider"></div>
+                </div>
+            </div>
+        </div>
+        <div class="item-answer" v-for='(index1,answer) in answers'>
+            <div class="p-answer">
+                <button class="ui icon <%activeOrNot(answer.id,question_data.vote_question,'like')%> button up" v-on:click=vote(question_data.id,answer.id,like)>
+              <i class="caret up icon"></i>
+              <div class="number"> <% answer.like_counts %> </div>
+        </button>
+                <button class="ui icon <%activeOrNot(answer.id,question_data.vote_question,'dislike')%> button down" v-on:click=vote(question_data.id,answer.id,dislike)>
+          <i class="caret down icon"></i>
+         </button>
+            </div>
+            <div class="c-answer">
+                <div class="ui text menu">
+                    <div class="ui header">
+                        <% answer.author.username %>, <span style="font-size:12px;"><% answer.author.profile.desc %></span>
+                            <div class="sub header">
+
+                            <span v-for="vote in question_data.vote_question">
+                            <span v-if="(answer.id==vote.answer)&&(vote.ticket=='like')">
+                              <% vote.voter.username %>
+                            </span>
+                                </span>
+                                等
+                                <% answer.like_counts %>人赞同
+                            </div>
+                    </div>
+                    <div class="ui image user-icon" v-if="user_id==-1" v-on:click="profile">
+                        <a href="#" class=userprofile>
+                            <img v-bind:src="answer.author.profile.avatar" alt="" style="height:25px;width:25px">
+                        </a>
+                    </div>
+                    <div class="ui image user-icon" v-if="user_id!=-1">
+                        <a href="/profile/<%answer.author.id%>" class=userprofile>
+                            <img v-bind:src="answer.author.profile.avatar" alt="" style="height:25px;width:25px">
+                        </a>
+                    </div>
+                </div>
+                <div class="r-answer" v-html='answer.content' v-highlightjs>
+                </div>
+                <div class="ui text menu meta-item" style="margin-bottom:20px;">
+                    <div class="item">
+                        发布于
+                        <% answer.createtime %>
+                    </div>
+                    <div class="item" v-on:click='answer.show=!answer.show' style="cursor:pointer">
+                        <div class="ui image">
+                            <img src="{% static 'images/comment_icon.png' %}" alt="" />
+                        </div>
+                        <% answer.answer_comments.length %>条评论
+                    </div>
+                </div>
+                <div class="ex-comment" v-if='answer.show' style="margin-top:-18px;">
+                    <div class="ui basic center aligned segment upangle">
+                        <i class="icon up large angle" style=""></i>
+                    </div>
+                    <div class="ui segment up" v-if='CommentShow(answer.answer_comments)'>
+                        <div class="ui comments">
+                            <div class="comment" v-for='(index2,comment)  in answer.answer_comments'>
+                                <div class="avatar">
+                                    <img v-bind:src="comment.author.profile.avatar" alt="" class="ui image" />
+                                </div>
+                                <div class="content">
+                                    <a class="author">
+                                        <% comment.author.profile.name %>
+                                    </a>
+                                    <div class="text">
+                                        <% comment.content %>
+                                    </div>
+                                    <div class="actions">
+                                        <span class="date" style="color: grey;"><% comment.createtime %></span>
+                                    </div>
+                                </div>
+                                <div class="ui divider" v-if='DividerShow(index2,answer.answer_comments)'></div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="ui segment down">
+                        <input type="input" class="ui input" v-model='answer.newcomment'>
+                        <div class="ui basic segment">
+                            <button class="ui button one" v-on:click='PushComment(answer.id,index1)'>评论</button>
+                            <button class="ui button two" v-on:click='answer.show=!answer.show'>取消</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <button class="ui button" v-on:click='loding' id='loadmore'>加载更多</button>
+
+        <div class="reply-input">
+          {% if request.user.is_authenticated %}
+          <div class="ui vertical basic segment" style="margin-top:10px;padding-bottom:0px;">
+            <span style="font-size: 13px;"><span style="color: #225599;">{{request.user.profile.name}}</span>，{{request.user.profile.desc}}</span>
+            <div class="ui image" style="float:right;margin-right:12px;">
+              <img src="/upload/{{ request.user.profile.avatar }}" class="ui image" style="height:25px;width:25px"/>
+            </div>
+          </div>
+          {% endif %}
+            <form>
+                {# {{ form.media }} #}
+                {{ form.as_p }}
+                <div class="ui button" v-on:click='PushAnswer'>发布回答</div>
+            </form>
+        </div>
+        {% block footer %}
+        {% endblock footer %}
+    </div>
+</div>
+
+{% endblock content %}
+
+
+        {% block data %}
+        question_data: [],
+        answers: [],
+        loadlimit: 6,
+        question_id: {{question_id}},
+        like: 'like',
+        dislike: 'dislike',
+        {% endblock data %}
+
+        {% block methods %}
+        getData: function(index) {
+            var self = this;
+            var comindex=index
+            reqwest({
+                url: '/api/questions/' + self.question_id,
+                method: 'GET',
+                type: 'json',
+                success: function(resp) {
+                    for(var i=0;i<resp.question_answer.length;i++){
+                      resp.question_answer[i]['newcomment']='';
+                      if(i==comindex){
+                        resp.question_answer[i]['show']=true;
+                      }
+                      else{
+                        resp.question_answer[i]['show']=false;
+                      }
+                    };
+                    self.question_data=resp;
+                    self.answers = self.question_data.question_answer.slice(0, self.loadlimit);
+                    hljs.initHighlightingOnLoad();
+                },
+            })
+        },
+
+        loding: function() {
+            if(this.loadlimit>=this.question_data.question_answer.length){
+              $('#loadmore').text('已经全部加载完毕')
+            }
+            else {
+              this.loadlimit=this.loadlimit+5;
+              this.answers=this.question_data.question_answer.slice(0,this.loadlimit);
+            }
+        },
+        loader: function() {
+          $('.ui.loader').attr('class', 'ui basic segment');
+        },
+        activeOrNot: function(answer_id,votes,vote) {
+          var self = this
+          for(var i=0;i<votes.length;i++){
+            if ((votes[i].answer==answer_id)&&(votes[i].voter.id==self.user_id)){
+              if (votes[i].ticket==vote){
+                return 'active'
+              }
+              else{
+                return ''
+              }
+            }
+          }
+        },
+        vote: function(question_id, answer_id, vote) {
+            var self = this;
+            if (self.user_id==-1){
+              $('#modal2 > .content > p').text('点赞前请先登录')
+              $('#modal2').modal('show')
+              return ''
+            }
+            reqwest({
+                url: '/vote/',
+                method: 'POST',
+                type: 'json',
+                data: {
+                    question_id: question_id,
+                    answer_id: answer_id,
+                    vote: vote,
+                    user_id: self.user_id
+                },
+                success: function(resp) {
+                    self.getData(-1)
+                },
+            })
+        },
+        PushAnswer: function(question_id) {
+            var self = this;
+            if (self.user_id==-1){
+              $('#modal2 > .content > p').text('回答前请先登录')
+              $('#modal2').modal('show')
+              return ''
+            }
+            var content = CKEDITOR.instances['id_content'].getData()
+            reqwest({
+                url: '/api/push_answer/',
+                method: 'POST',
+                type: 'json',
+                data: {
+                    question_id: self.question_id,
+                    content: content,
+                    user_id: self.user_id
+                },
+                success: function(resp) {
+                    CKEDITOR.instances['id_content'].setData("")
+                    self.loadlimit=self.question_data.length
+                    self.getData(-1);
+                },
+                error: function(err) {
+                    var resp=JSON.parse(err.response)
+                    //console.log('the err is :')
+                    //console.log(resp.msg)
+                    if(resp.msg=='you have ansered before'){
+                      $('#modal2 > .content > p').text('你已经回答过此问题')
+                      $('#modal2').modal('show')
+                    }
+
+                }
+            })
+        },
+        CommentShow :function(commentall){
+          if(commentall.length>0){
+            return true
+          }
+          else{
+            return false
+          }
+        },
+        DividerShow: function(index,comment){
+          console.log(index)
+          console.log(comment.length)
+          if(index < (comment.length-1)){
+            return true
+          }
+          else{
+            return false
+          }
+        },
+        profile:function(){
+          $('#modal2 > .content').text("请先请登录")
+          this.q_modalshow()
+          return ""
+        },
+        PushComment: function(answer_id,index) {
+          console.log(index)
+            var self = this;
+            var comment=self.answers[index].newcomment
+            reqwest({
+                url: '/api/push_comment/',
+                type: 'json',
+                method:'post',
+                data:{
+                  user:self.user_id,
+                  comment:comment,
+                  answer_id:answer_id,
+                },
+                success: function(resp) {
+                  console.log('succes')
+                  self.answers[index].newcomment
+                  self.getData(index)
+                },
+                error: function(err) {
+                  console.log('the err is :');
+                  console.log(err);
+                },
+            })
+        },
+        {% endblock methods %}
+        {% block computed %}
+        {% endblock computed %}
+
+        {% block ready %}
+        this.getData(-1);
+        this.loader();
+        {% endblock ready %}
+        {% block jquery %}
+        $(".reply-input > form > p > label").hide();
+        {% endblock jquery %}
+        {% block addon %}
+      <script type="text/javascript" src="/static/ckeditor/ckeditor/ckeditor.js" defer='defer'></script>
+      <script type="text/javascript" src="/static/ckeditor/ckeditor-init.js"></script>
+        {% endblock addon %}

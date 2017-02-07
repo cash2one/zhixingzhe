@@ -1,0 +1,80 @@
+{% load staticfiles %}
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="utf-8">
+    <title>注册</title>
+    <link rel="shortcut icon" href="{% static 'images/favicon.ico' %}">
+    <link rel="stylesheet" href="{% static 'css\semantic.css' %}" media="screen" title="no title" charset="utf-8">
+    <link rel="stylesheet" href="{% static 'css\login.css' %}" media="screen" title="no title" charset="utf-8">
+    <link rel="stylesheet" href="{% static 'css/common.css' %}" media="screen" title="no title" charset="utf-8">
+    <script type="text/javascript" src="{% static 'js/jquery.js' %}"></script>
+</head>
+
+<body>
+    <form class="bg" action="{% url 'register' %}" method="POST">
+        <div class="ui header weblogo"><a href="/home">知行者</a> </div>
+        <div class="ui  two item text  menu">
+            <a class="active item">
+                <span><p class="outset" style="border-bottom: 2px solid #2185D0;">注册</p></span></a>
+            <a class="item" href="{% url 'login' %}">
+                <span><p class="outset" style="border-bottom: 2px solid rgb(247, 250, 252);">登录</p></span></a>
+        </div>
+        {% if form.errors %}
+        <div class="ui negative message">
+            {{ form.errors }}
+        </div>
+        <div class="ui vertical menu">
+            {% for field in form %}
+            <div class="{{ field.errors|yesno:'active red ,'}} item">
+                <div class="ui transparent input ">
+                    {{field}}
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+        {% else %}
+        <div class="ui vertical menu">
+            {% for field in form %}
+            <div class="item">
+                <div class="ui transparent input">
+                    {{field}}
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+        {% endif %} {% csrf_token %}
+        <button class="ui blue button" type="submit">
+               注册
+        </button>
+    </form>
+
+    <script type="text/javascript">
+        $("#id_name").attr("placeholder", "姓名");
+        $("#id_email").attr("placeholder", "邮箱");
+        $("#id_password").attr("placeholder", "密码（不少于6位)");
+        $("#id_password").attr("type", "password");
+        $("#id_name").focus(function() {
+            $("#id_name").attr("placeholder", "");
+        });
+        $("#id_name").blur(function() {
+            $("#id_name").attr("placeholder", "姓名");
+        });
+        $("#id_email").focus(function() {
+            $("#id_email").attr("placeholder", "");
+        });
+        $("#id_email").blur(function() {
+            $("#id_email").attr("placeholder", "邮箱");
+        });
+        $("#id_password").focus(function() {
+            $("#id_password").attr("placeholder", "");
+        });
+        $("#id_password").blur(function() {
+            $("#id_password").attr("placeholder", "密码（不少于6位)");
+        });
+
+    </script>
+</body>
+
+</html>
